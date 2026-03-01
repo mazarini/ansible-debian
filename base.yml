@@ -1,0 +1,12 @@
+---
+- name: "Apply Base Configuration to MyHost"
+  hosts: servers
+  become: true
+
+  # On peut définir des variables globales ici ou les laisser dans group_vars/host_vars
+  vars:
+    # Optionnel : On peut forcer la mise à jour des caches apt ici aussi
+    ansible_cache_valid_time: 3600
+
+  roles:
+    - role: base

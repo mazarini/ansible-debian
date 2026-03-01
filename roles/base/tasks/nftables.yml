@@ -1,0 +1,22 @@
+---
+# tasks for nftables using template
+
+- name: Install nftables
+  apt:
+    name: nftables
+    state: present
+
+- name: Deploy nftables configuration from template
+  template:
+    src: nftables.conf.j2
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: '0750'
+  notify: Reload NFTables
+
+- name: Enable and start nftables service
+  systemd:
+    name: nftables
+    enabled: yes
+    state: started

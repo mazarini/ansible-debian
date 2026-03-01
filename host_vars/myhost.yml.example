@@ -1,0 +1,6 @@
+---
+ansible_host: 1.2.3.4
+ansible_user: root
+# Real username stored here safely
+vault_username: "myuser"
+vault_user_password_hash: "$6.../"

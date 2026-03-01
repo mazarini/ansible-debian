@@ -1,0 +1,42 @@
+#!/usr/sbin/nft -f
+
+# Clear all existing rules
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy drop;
+
+        # Allow established and related traffic
+        ct state established,related accept
+
+        # Allow local loopback
+        iif "lo" accept
+
+        # Allow ICMP and ICMPv6 (Essential for IPv6 health)
+        ip protocol icmp accept
+        ip6 nexthdr ipv6-icmp accept
+
+        # Placeholder for future services (Web, etc.)
+        {% for port in allowed_tcp_ports_ipv4 | default([]) %}
+        ip protocol tcp tcp dport {{ port }} accept
+        {% endfor %}
+
+        {% for port in allowed_tcp_ports_ipv6 | default([]) %}
+        tcp dport {{ port }} accept
+        ip6 nexthdr tcp tcp dport {{ port }} accept
+        {% endfor %}
+
+        {% for port in allowed_tcp_ports | default([]) %}
+        tcp dport {{ port }} accept
+        {% endfor %}
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+    }
+
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}

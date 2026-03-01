@@ -1,0 +1,20 @@
+---
+# roles/base/tasks/main.yml
+
+- name: "Setup primary user"
+  ansible.builtin.include_tasks: user.yml
+
+- name: "Configure root environment"
+  ansible.builtin.include_tasks: root.yml
+
+- name: "Hardening SSH"
+  ansible.builtin.include_tasks: ssh.yml
+
+- name: "Install and configure Fail2Ban"
+  ansible.builtin.include_tasks: fail2ban.yml
+
+- name: "Setup Network (systemd-networkd)"
+  ansible.builtin.include_tasks: network.yml
+
+- name: "Configure Firewall (NFTables)"
+  ansible.builtin.include_tasks: nftables.yml

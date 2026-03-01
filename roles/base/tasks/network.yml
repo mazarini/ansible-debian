@@ -1,0 +1,43 @@
+---
+# roles/base/tasks/network.yml
+
+- name: "Deploy systemd-networkd tiered configurations"
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "/etc/systemd/network/{{ item.dest }}"
+    owner: root
+    group: systemd-network
+    mode: '0644'
+  loop:
+    - { src: '10-lo.network.j2', dest: '10-lo.network' }
+    - { src: '20-eno3.network.j2', dest: '20-eno3.network' }
+  notify: "Restart systemd-networkd"
+
+# Sécurité : On nettoie les anciens fichiers de nos tests précédents
+- name: "Clean up previous network configuration files"
+  ansible.builtin.file:
+    path: "/etc/systemd/network/{{ item }}"
+    state: absent
+  loop:
+    - '20-eno3-dhcp.network'
+
+- name: "Install systemd-resolved"
+  ansible.builtin.apt:
+    name: systemd-resolved
+    state: present
+
+- name: "Link /etc/resolv.conf to systemd-resolved"
+  ansible.builtin.file:
+    src: "/run/systemd/resolve/stub-resolv.conf"
+    dest: "/etc/resolv.conf"
+    state: link
+    force: true
+  
+- name: "Enable and start network services"
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - systemd-networkd
+    - systemd-resolved

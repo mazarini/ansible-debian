@@ -1,0 +1,48 @@
+---
+- name: "Ensure sudo is installed"
+  ansible.builtin.apt:
+    name: sudo
+    state: present
+    update_cache: true
+
+- name: "Ensure vim is installed"
+  ansible.builtin.apt:
+    name: vim
+    state: present
+    update_cache: true
+
+- name: "Create the primary user"
+  ansible.builtin.user:
+    name: "{{ vault_username }}"
+    shell: /bin/bash
+    groups: sudo
+    append: true
+    password: "{{ vault_user_password_hash }}"
+    state: present
+
+- name: "Deploy SSH public key"
+  ansible.posix.authorized_key:
+    user: "{{ vault_username }}"
+    state: present
+    key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+
+- name: "Configure sudoers for the primary user"
+  ansible.builtin.copy:
+    content: "{{ vault_username }} ALL=(ALL) NOPASSWD:ALL"
+    dest: "/etc/sudoers.d/90-primary-user"
+    owner: root
+    group: root
+    mode: '0440'
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: "Deploy environment config files for primary user"
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ vault_username }}"
+    group: "{{ vault_username }}"
+    mode: '0644'
+  loop:
+    - { src: 'user.bashrc.j2', dest: "/home/{{ vault_username }}/.bashrc" }
+    - { src: '.bash_aliases.j2', dest: "/home/{{ vault_username }}/.bash_aliases" }
+    - { src: '.vimrc.j2', dest: "/home/{{ vault_username }}/.vimrc" }

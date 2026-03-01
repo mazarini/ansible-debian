@@ -1,0 +1,35 @@
+# roles/base/handlers/main.yml
+
+- name: "Restart SSH"
+  ansible.builtin.service:
+    name: ssh
+    state: restarted
+
+- name: "Restart fail2ban"
+  ansible.builtin.service:
+    name: fail2ban
+    state: restarted
+
+- name: "Restart systemd-networkd"
+  ansible.builtin.service:
+    name: systemd-networkd
+    state: restarted
+
+- name: "Reload NFTables"
+  ansible.builtin.shell:
+    cmd: "nft -c -f /etc/nftables.conf && systemctl reload nftables"
+  register: nft_reload_result
+  changed_when: false
+  # We use changed_when: false because the handler only refreshes the service state
+  # following a template change. The 'change' is already accounted for by the template task.
+
+- name: "Ensure security services are started and enabled"
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - nftables
+    - fail2ban
+    - systemd-networkd
+    - ssh

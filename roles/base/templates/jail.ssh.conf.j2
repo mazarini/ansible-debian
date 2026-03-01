@@ -1,0 +1,22 @@
+# Fail2ban configuration for local administration
+# Managed by Ansible
+
+[DEFAULT]
+# Global banning strategy using nftables
+banaction = nftables-multiport
+banaction_allports = nftables-allports
+
+# Security: Whitelist localhost and your management IP
+# This prevents you from being locked out of your own server
+ignoreip = 127.0.0.1/8 ::1 {{ admin_management_ip | default('') }}
+
+# Ban settings
+bantime  = {{ fail2ban_bantime | default('6h') }}
+findtime = {{ fail2ban_findtime | default('10m') }}
+maxretry = {{ fail2ban_maxretry | default('2') }}
+
+[sshd]
+enabled = true
+port    = ssh
+logpath = %(sshd_log)s
+backend = %(sshd_backend)s

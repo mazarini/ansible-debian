@@ -1,0 +1,50 @@
+---
+- name: "Ensure openssh-server is installed"
+  ansible.builtin.apt:
+    name: openssh-server
+    state: present
+    update_cache: true
+
+- name: "Deploy SSH banner"
+  ansible.builtin.template:
+    src: issue.ssh.j2
+    dest: /etc/ssh/issue.ssh
+    owner: root
+    group: root
+    mode: '0644'
+    
+- name: "Deploy custom SSH configuration (IPv4 only, Whitelist)"
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/99-myhost-custom.conf
+    mode: '0644'
+    content: |
+      # IPv4 only for SSH
+      AddressFamily inet
+      ListenAddress 0.0.0.0
+
+      # Access Control
+      AllowUsers {{ ssh_allowed_users }}
+      PermitRootLogin prohibit-password
+      PasswordAuthentication yes
+      PubkeyAuthentication yes
+
+      # Security & Hardening
+      MaxAuthTries 3
+      ClientAliveInterval 300
+      ClientAliveCountMax 2
+      X11Forwarding no
+      UseDNS no
+
+      # Banner configuration
+      Banner /etc/ssh/issue.ssh
+      DebianBanner no
+  notify: "Restart SSH"
+
+- name: "Ensure main sshd_config includes the .d directory"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^Include /etc/ssh/sshd_config.d/\*.conf'
+    line: 'Include /etc/ssh/sshd_config.d/*.conf'
+    insertbefore: BOF
+    state: present
+  notify: "Restart SSH"

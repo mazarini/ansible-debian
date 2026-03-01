@@ -1,0 +1,6 @@
+---
+incus_network_address: "10.0.8.1/24"
+incus_storage_pool: "local"
+# Le mot de passe sera chiffré plus tard
+incus_trust_password: "CHANGEME" 
+ansible_python_interpreter: /usr/bin/python3

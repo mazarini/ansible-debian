@@ -1,0 +1,11 @@
+{
+  "folders": [
+    {
+      "path": "../",
+      "name": "ansible-debian"
+    }
+  ],
+  "settings": {
+    "ansible.python.interpreterPath": "/usr/bin/python3"
+  },
+}

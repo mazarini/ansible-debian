@@ -1,0 +1,23 @@
+- name: "Personalize Message of the Day (MOTD)"
+  ansible.builtin.template:
+    src: motd.j2
+    dest: /etc/motd
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "Disable dynamic kernel info in MOTD"
+  ansible.builtin.file:
+    path: /etc/update-motd.d/10-uname
+    mode: '0644' # suppress 'x' (exec)
+    
+- name: "Deploy environment config files"
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
+    mode: '0644'
+  loop:
+    - { src: 'root.bashrc.j2', dest: "/root/.bashrc", owner: "root" }
+    - { src: '.vimrc.j2', dest: "/root/.vimrc", owner: "root" }

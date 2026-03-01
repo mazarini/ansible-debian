@@ -1,0 +1,112 @@
+---
+- name: "Hardening and Service Configuration for MyHost"
+  hosts: servers
+  become: true
+
+  tasks:
+    # --- SECTION 1 : SSH via sshd_config.d ---
+    - name: "Ensure sshd_config.d directory exists"
+      ansible.builtin.file:
+        path: /etc/ssh/sshd_config.d
+        state: directory
+        mode: '0755'
+
+    - name: "Deploy custom SSH configuration (IPv4 only, Whitelist)"
+      ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config.d/99-myhost-custom.conf
+        mode: '0644'
+        content: |
+          # IPv4 only for SSH
+          AddressFamily inet
+          ListenAddress 0.0.0.0
+
+          # Access Control
+          AllowUsers {{ ssh_allowed_users }}
+          PermitRootLogin prohibit-password
+          PasswordAuthentication yes
+          PubkeyAuthentication yes
+
+          # Hardening
+          MaxAuthTries 3
+          ClientAliveInterval 300
+          ClientAliveCountMax 2
+      notify: "Restart SSH"
+
+    - name: "Ensure main sshd_config includes the .d directory"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^Include /etc/ssh/sshd_config.d/\*.conf'
+        line: 'Include /etc/ssh/sshd_config.d/*.conf'
+        insertbefore: BOF
+        state: present
+      notify: "Restart SSH"
+
+    # --- SECTION 2 : Sécurité (Fail2Ban & NFTables) ---
+    - name: "Install security and network packages"
+      ansible.builtin.apt:
+        name: [nftables, fail2ban]
+        state: present
+        update_cache: true
+
+    - name: "Configure Fail2Ban for SSH"
+      ansible.builtin.copy:
+        dest: /etc/fail2ban/jail.local
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          [sshd]
+          enabled = true
+          port = 22
+          maxretry = 3
+          bantime = 1h
+      notify: "Restart Fail2Ban"
+
+    - name: "Deploy NFTables ruleset (via template)"
+      ansible.builtin.template:
+        src: templates/nftables.j2
+        dest: /etc/nftables.conf
+        mode: '0750'
+      notify: "Reload NFTables"
+
+    # --- SECTION 3 : Réseau Statique ---
+    - name: "Configure Static Networking (IPv4/IPv6)"
+      ansible.builtin.template:
+        src: templates/interfaces.j2
+        dest: /etc/network/interfaces
+        mode: '0644'
+      # Attention: Un changement ici peut couper la connexion
+      # notify: "Restart Networking"
+
+    # --- SECTION 4 : Post-Install Incus ---
+    - name: "Add primary user to incus-group"
+      ansible.builtin.user:
+        name: "{{ vault_username }}"
+        groups: incus-admin
+        append: true
+
+  handlers:
+    - name: "Restart SSH"
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
+
+    - name: "Restart Fail2Ban"
+      ansible.builtin.service:
+        name: fail2ban
+        state: restarted
+
+    - name: "Reload NFTables"
+      ansible.builtin.service:
+        name: nftables
+        state: reloaded
+
+    - name: "Ensure security services are started and enabled"
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - nftables
+        - fail2ban
+        - ssh
