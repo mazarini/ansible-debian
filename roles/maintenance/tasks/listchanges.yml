@@ -1,0 +1,7 @@
+---
+- name: "Install package"
+  ansible.builtin.apt:
+    name:
+      - apt-listchanges
+    state: present
+    update_cache: true

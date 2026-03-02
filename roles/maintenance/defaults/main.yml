@@ -1,0 +1,4 @@
+---
+# Configuration par défaut pour le rôle maintenance
+maintenance_admin_email: "root"
+maintenance_distribution_release: trixie

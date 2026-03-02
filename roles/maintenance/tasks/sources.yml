@@ -1,0 +1,17 @@
+---
+- name: "Clear legacy sources.list"
+  ansible.builtin.copy:
+    content: "# Modern sources are in /etc/apt/sources.list.d/debian.sources\n"
+    dest: /etc/apt/sources.list
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "Deploy DEB822 sources"
+  ansible.builtin.template:
+    src: debian.sources.j2
+    dest: /etc/apt/sources.list.d/debian.sources
+    owner: root
+    group: root
+    mode: '0644'
+  notify: "Update apt cache"

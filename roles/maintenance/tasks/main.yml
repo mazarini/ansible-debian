@@ -1,0 +1,17 @@
+---
+# roles/maintenance/tasks/main.yml
+
+- name: "Setup modern sources.list"
+  ansible.builtin.include_tasks: sources.yml
+
+- name: "Setup apt-listchanges"
+  ansible.builtin.include_tasks: listchanges.yml
+
+- name: "Setup unattended-upgrades"
+  ansible.builtin.include_tasks: upgrade.yml
+
+- name: "Setup logrotate"
+  ansible.builtin.include_tasks: logrotate.yml
+
+- name: "Setup logwatch"
+  ansible.builtin.include_tasks: logwatch.yml
