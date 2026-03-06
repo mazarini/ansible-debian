@@ -5,7 +5,7 @@
   ansible.builtin.apt:
     name: fail2ban
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: "Fail2ban: Deploy local jail configuration"
   ansible.builtin.template:

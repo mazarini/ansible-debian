@@ -12,7 +12,7 @@
     owner: root
     group: root
     mode: '0644'
-    
+
 - name: "Deploy custom SSH configuration (IPv4 only, Whitelist)"
   ansible.builtin.copy:
     dest: /etc/ssh/sshd_config.d/99-myhost-custom.conf

@@ -10,7 +10,7 @@
   ansible.builtin.file:
     path: /etc/update-motd.d/10-uname
     mode: '0644' # suppress 'x' (exec)
-    
+
 - name: "Deploy environment config files"
   ansible.builtin.template:
     src: "{{ item.src }}"

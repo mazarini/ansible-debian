@@ -1,13 +1,12 @@
----
 # tasks for nftables using template
 
 - name: Install nftables
-  apt:
+  ansible.builtin.apt:
     name: nftables
     state: present
 
 - name: Deploy nftables configuration from template
-  template:
+  ansible.builtin.template:
     src: nftables.conf.j2
     dest: /etc/nftables.conf
     owner: root
@@ -16,7 +15,7 @@
   notify: Reload NFTables
 
 - name: Enable and start nftables service
-  systemd:
+  ansible.builtin.systemd:
     name: nftables
-    enabled: yes
+    enabled: true
     state: started
